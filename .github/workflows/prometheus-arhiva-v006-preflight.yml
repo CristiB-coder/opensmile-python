@@ -1,14 +1,11 @@
-# Bound by PROMETHEUS_ARHIVA_V006_GITHUB_ACTIONS_PREFLIGHT_PROTOCOL_0001_V005
-# protocol sha256: e039520d902052f14b97b96f6e206915331f79e42f1afde5f8e1ec61fbf68e54
+# Bound by PROMETHEUS_ARHIVA_V006_GITHUB_PR_PREFLIGHT_PROTOCOL_0001_V007
+# protocol sha256: f5139ffe582a97170f9a62b6654be029034925b0ebb9045f280bd7267aa0d353
 name: Prometheus Arhiva V006 API preflight
 
 on:
-  push:
+  pull_request:
     branches:
-      - agent/prometheus-arhiva-v006-capture
-    paths:
-      - '.github/workflows/prometheus-arhiva-v006-preflight.yml'
-      - '.prometheus-arhiva-v006/**'
+      - main
   workflow_dispatch:
 
 permissions:
