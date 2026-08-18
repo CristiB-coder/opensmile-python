@@ -1,0 +1,56 @@
+name: Prometheus Arhiva V006 API preflight
+
+on:
+  push:
+    branches:
+      - agent/prometheus-arhiva-v006-capture
+    paths:
+      - '.github/workflows/prometheus-arhiva-v006-preflight.yml'
+      - '.prometheus-arhiva-v006/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify frozen script
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo 'b60b32e25bfbd9658b56475af31fad67d9db64a4c2cb6662e7d9ec0a4ae1b3c8  .prometheus-arhiva-v006/capture_v006_queries_api_v003_v002.py' | sha256sum -c -
+      - name: Run two-request official API preflight
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 .prometheus-arhiva-v006/capture_v006_queries_api_v003_v002.py --output-dir OFFICIAL_API_PREFLIGHT --preflight
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path('OFFICIAL_API_PREFLIGHT/capture_register.json')
+          d = json.loads(p.read_text())
+          s = d['summary']
+          print(json.dumps(s, indent=2, sort_keys=True))
+          assert s['requests'] == 2, s
+          assert s['successful_http_200'] == 2, s
+          assert s['errors'] == 0, s
+          assert s['parsed_results'] >= 2, s
+          assert s['article_pages_opened'] == 0, s
+          assert s['dlreg_runs'] == 0, s
+          assert s['gold_labels_created'] == 0, s
+          for r in d['capture_records']:
+              assert r['parse_status'] == 'PASS', r
+              assert r['parsed_result_count'] >= 1, r
+          PY
+      - name: Upload preflight capture
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: prometheus-arhiva-v006-api-preflight
+          path: OFFICIAL_API_PREFLIGHT
+          retention-days: 1
+          if-no-files-found: error
